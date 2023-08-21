@@ -1,0 +1,27 @@
+<?php
+/** Los ajustes de configuración de WordPress van aquí. */
+
+define('DB_NAME', 'wordpress');
+define('DB_USER', 'wordpress');
+define('DB_PASSWORD', 'wordpress');
+define('DB_HOST', 'localhost');
+define('DB_CHARSET', 'utf8');
+define('DB_COLLATE', '');
+
+define('AUTH_KEY',         'pon_tu_frase_única_aquí');
+define('SECURE_AUTH_KEY',  'pon_tu_frase_única_aquí');
+define('LOGGED_IN_KEY',    'pon_tu_frase_única_aquí');
+define('NONCE_KEY',        'pon_tu_frase_única_aquí');
+define('AUTH_SALT',        'pon_tu_frase_única_aquí');
+define('SECURE_AUTH_SALT', 'pon_tu_frase_única_aquí');
+define('LOGGED_IN_SALT',   'pon_tu_frase_única_aquí');
+define('NONCE_SALT',       'pon_tu_frase_única_aquí');
+
+$table_prefix  = 'wp_';
+
+define('WP_DEBUG', false);
+
+if ( ! defined( 'ABSPATH' ) ) {
+	define( 'ABSPATH', __DIR__ . '/' );
+}
+require_once ABSPATH . 'wp-settings.php';
