@@ -75,13 +75,6 @@
       become: yes
       tags: [wordpress]
 
-    - name: Instalar tema
-      copy:
-        src: themes/first
-        dest: /var/www/html/wordpress/wp-content/themes/
-        remote_src: yes
-      tags: [wordpress]
-
     # Eliminar el archivo index.html predeterminado de Apache
     - name: Eliminar archivo index.html predeterminado
       file:
