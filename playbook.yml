@@ -1,0 +1,117 @@
+---
+- name: Instalar Apache, PHP, MySQL y WordPress
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Actualizar lista de paquetes apt
+      apt:
+        update_cache: yes
+      tags: [packages]
+
+    - name: Instalar paquetes necesarios
+      apt:
+        name:
+          - apache2
+          - php
+          - libapache2-mod-php
+          - php-mysql
+          - mysql-server
+          - php-gd
+          - php-curl
+          - php-xml
+          - php-mbstring
+          - php-xmlrpc
+          - php-zip
+        state: present
+      tags: [packages]
+
+    - name: Reiniciar servicio Apache
+      service:
+        name: apache2
+        state: restarted
+      tags: [services]
+
+    - name: Reiniciar servicio MySQL
+      service:
+        name: mysql
+        state: restarted
+      tags: [services]
+
+    - name: Descargar y extraer WordPress
+      unarchive:
+        src: https://wordpress.org/latest.tar.gz
+        dest: /var/www/html
+        remote_src: yes
+      tags: [wordpress]
+
+    - name: Copiar archivo de configuración wp-config.php
+      copy:
+        src: wp-config.php.j2
+        dest: /var/www/html/wordpress/wp-config.php
+      tags: [wordpress]
+
+    - name: Establecer permisos en el directorio de WordPress
+      file:
+        path: /var/www/html/wordpress
+        state: directory
+        mode: '0755'
+      tags: [wordpress]
+
+      # Configurar Apache para servir WordPress en el directorio raíz
+    - name: Configurar Apache para servir WordPress
+      template:
+        src: wordpress.conf.j2
+        dest: /etc/apache2/sites-available/wordpress.conf
+      tags: [wordpress]
+
+    - name: Crear base de datos de WordPress
+      shell: "sudo mysql -u root -e 'CREATE DATABASE IF NOT EXISTS wordpress;'"
+      become: yes
+      tags: [wordpress]
+
+    - name: Crear usuario de la base de datos de WordPress
+      shell: "sudo mysql -u root -e \"GRANT ALL PRIVILEGES ON wordpress.* TO 'wordpress'@'localhost' IDENTIFIED BY 'wordpress';\""
+      become: yes
+      tags: [wordpress]
+
+    - name: Instalar tema
+      copy:
+        src: themes/first
+        dest: /var/www/html/wordpress/wp-content/themes/
+        remote_src: yes
+      tags: [wordpress]
+
+    # Eliminar el archivo index.html predeterminado de Apache
+    - name: Eliminar archivo index.html predeterminado
+      file:
+        path: /var/www/html/index.html
+        state: absent
+      tags: [wordpress]
+
+    # Mover el contenido de WordPress a la carpeta raíz del sitio web
+    - name: Mover contenido de WordPress a la carpeta raíz
+      command: "cp -r /var/www/html/wordpress/. /var/www/html/"
+      args:
+        creates: /var/www/html/index.php
+      tags: [wordpress]
+
+    # Eliminar el directorio /wordpress ya que el contenido se movió a la carpeta raíz
+    - name: Eliminar directorio /wordpress
+      file:
+        path: /var/www/html/wordpress
+        state: absent
+      tags: [wordpress]
+
+    # Configurar Apache para servir WordPress en el puerto 8080
+    - name: Configurar Apache para servir WordPress
+      template:
+        src: wordpress.conf.j2
+        dest: /etc/apache2/sites-available/wordpress.conf
+      notify: Habilitar sitio WordPress  # Llamar al handler
+      tags: [wordpress]
+
+  handlers:
+    - name: Habilitar sitio WordPress
+      command: a2ensite wordpress
+      become: yes
